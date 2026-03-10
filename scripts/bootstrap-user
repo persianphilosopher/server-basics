@@ -39,10 +39,13 @@ install -m 600 -o "$NEW_USER" -g "$NEW_USER" "$BOOTSTRAP_KEYS" "$NEW_HOME/.ssh/a
 
 echo
 echo "Bootstrap complete."
-echo "You should now test login in a new terminal:"
-echo "  ssh -p 4747 $NEW_USER@$(hostname -I | awk '{print $1}')"
 echo
-echo "Or, if SSH is still on the default port:"
+echo "Next step: test login for the new user in a NEW terminal."
+echo
+echo "If SSH is still on the default port:"
 echo "  ssh $NEW_USER@$(hostname -I | awk '{print $1}')"
 echo
-echo "Do not disable password auth or root access until that login works."
+echo "After that works, you can later harden SSH and switch to port 4747."
+echo
+echo "Do not disable password auth or root access until the new user login works."
+echo "Ensuring SSH access is present for '$NEW_USER'..."
