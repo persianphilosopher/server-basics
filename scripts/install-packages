@@ -23,6 +23,7 @@ PACKAGES=(
   p7zip-full
   xz-utils
   dos2unix
+  bind9-dnsutils
   rename
   man-db
   rsync
