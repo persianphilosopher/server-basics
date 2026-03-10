@@ -1,14 +1,48 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-BOOTSTRAP_USER="$(id -un)"
-BOOTSTRAP_HOME="$HOME"
+if [[ "${EUID}" -ne 0 ]]; then
+  echo "Run this script as root." >&2
+  exit 1
+fi
+
+BOOTSTRAP_USER="${SUDO_USER:-$(id -un)}"
+BOOTSTRAP_HOME="$(getent passwd "$BOOTSTRAP_USER" | cut -d: -f6)"
 BOOTSTRAP_KEYS="$BOOTSTRAP_HOME/.ssh/authorized_keys"
 
 echo "Bootstrap user: $BOOTSTRAP_USER"
+echo "Using keys from: $BOOTSTRAP_KEYS"
+
+if [[ ! -f "$BOOTSTRAP_KEYS" ]]; then
+  echo "No authorized_keys found for $BOOTSTRAP_USER at $BOOTSTRAP_KEYS" >&2
+  echo "Add your SSH key first, then rerun this script." >&2
+  exit 1
+fi
 
 read -r -p "New admin username [farhang]: " NEW_USER
 NEW_USER="${NEW_USER:-farhang}"
 
 echo "Target admin user: $NEW_USER"
 
+if id "$NEW_USER" >/dev/null 2>&1; then
+  echo "User '$NEW_USER' already exists."
+else
+  adduser --disabled-password --gecos "" "$NEW_USER"
+  usermod -aG sudo "$NEW_USER"
+  echo "Created user '$NEW_USER' and added to sudo."
+fi
+
+NEW_HOME="$(getent passwd "$NEW_USER" | cut -d: -f6)"
+
+install -d -m 700 -o "$NEW_USER" -g "$NEW_USER" "$NEW_HOME/.ssh"
+install -m 600 -o "$NEW_USER" -g "$NEW_USER" "$BOOTSTRAP_KEYS" "$NEW_HOME/.ssh/authorized_keys"
+
+echo
+echo "Bootstrap complete."
+echo "You should now test login in a new terminal:"
+echo "  ssh -p 4747 $NEW_USER@$(hostname -I | awk '{print $1}')"
+echo
+echo "Or, if SSH is still on the default port:"
+echo "  ssh $NEW_USER@$(hostname -I | awk '{print $1}')"
+echo
+echo "Do not disable password auth or root access until that login works."

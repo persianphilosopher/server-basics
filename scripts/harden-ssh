@@ -1,0 +1,91 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+if [[ "${EUID}" -ne 0 ]]; then
+  echo "Run this script as root." >&2
+  exit 1
+fi
+
+usage() {
+  echo "Usage: harden-ssh <bootstrap-user> <admin-user>" >&2
+  exit 1
+}
+
+[[ $# -eq 2 ]] || usage
+
+BOOTSTRAP_USER="$1"
+ADMIN_USER="$2"
+
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd -- "$SCRIPT_DIR/.." && pwd)"
+TEMPLATE="$REPO_ROOT/templates/ssh/sshd_config.4747.example"
+TARGET="/etc/ssh/sshd_config"
+STAMP="$(date '+%F-%H%M%S')"
+BACKUP="$TARGET.pre-server-basics.$STAMP.bak"
+TMPFILE="$(mktemp)"
+
+if [[ ! -f "$TEMPLATE" ]]; then
+  echo "Missing template: $TEMPLATE" >&2
+  exit 1
+fi
+
+if ! id "$BOOTSTRAP_USER" >/dev/null 2>&1; then
+  echo "Bootstrap user '$BOOTSTRAP_USER' does not exist." >&2
+  exit 1
+fi
+
+if ! id "$ADMIN_USER" >/dev/null 2>&1; then
+  echo "Admin user '$ADMIN_USER' does not exist." >&2
+  exit 1
+fi
+
+echo "Preparing SSH config..."
+echo "  bootstrap user: $BOOTSTRAP_USER"
+echo "  admin user:     $ADMIN_USER"
+echo
+
+sed \
+  -e "s/__ADMIN_USER__/$ADMIN_USER/g" \
+  -e "s/__BOOTSTRAP_USER__/$BOOTSTRAP_USER/g" \
+  "$TEMPLATE" > "$TMPFILE"
+
+cp "$TARGET" "$BACKUP"
+echo "Backed up current sshd_config to:"
+echo "  $BACKUP"
+echo
+
+cp "$TMPFILE" "$TARGET"
+rm -f "$TMPFILE"
+
+echo "Testing SSH config..."
+if ! sshd -t; then
+  echo "sshd config test failed. Restoring backup." >&2
+  cp "$BACKUP" "$TARGET"
+  exit 1
+fi
+
+echo "SSH config test passed."
+echo
+echo "IMPORTANT:"
+echo "Before reloading SSH, make sure port 4747 is allowed in your firewall."
+echo "Example:"
+echo "  ufw allow 4747/tcp"
+echo
+
+read -r -p "Reload SSH now? [y/N] " RELOAD_SSH
+RELOAD_SSH="${RELOAD_SSH:-N}"
+
+if [[ "$RELOAD_SSH" =~ ^[Yy]$ ]]; then
+  systemctl reload ssh
+  echo
+  echo "SSH reloaded."
+  echo
+  echo "Now test in a NEW terminal:"
+  echo "  ssh -p 4747 $ADMIN_USER@<server>"
+  echo
+  echo "Bootstrap fallback should still work for:"
+  echo "  ssh -p 4747 $BOOTSTRAP_USER@<server>"
+else
+  echo "SSH config written but not reloaded."
+fi
