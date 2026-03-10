@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd -- "$SCRIPT_DIR/.." && pwd)"
+BASHRC="$HOME/.bashrc"
+STAMP="$(date '+%F-%H%M%S')"
+BACKUP="$HOME/.bashrc.pre-server-basics.$STAMP.bak"
+
+BLOCK_START="# >>> server-basics >>>"
+BLOCK_END="# <<< server-basics <<<"
+
+if [[ -f "$BASHRC" ]]; then
+  cp "$BASHRC" "$BACKUP"
+  echo "Backed up .bashrc to $BACKUP"
+else
+  touch "$BASHRC"
+fi
+
+if grep -Fq "$BLOCK_START" "$BASHRC"; then
+  echo "server-basics block already present in $BASHRC"
+  exit 0
+fi
+
+cat >> "$BASHRC" <<EOF
+
+$BLOCK_START
+export BASICS_ROOT="$REPO_ROOT"
+if [[ -d "\$BASICS_ROOT/shell" ]]; then
+  for f in "\$BASICS_ROOT"/shell/*.sh; do
+    [[ -r "\$f" ]] && source "\$f"
+  done
+fi
+$BLOCK_END
+EOF
+
+echo "Added server-basics loader block to $BASHRC"

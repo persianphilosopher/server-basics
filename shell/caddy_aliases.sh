@@ -1,0 +1,5 @@
+alias caddyedit='nano /etc/caddy/Caddyfile'
+alias caddytest='caddy validate --config /etc/caddy/Caddyfile'
+alias caddyreload='systemctl reload caddy'
+alias caddyrestart='systemctl restart caddy'
+alias caddystatus='systemctl status caddy'

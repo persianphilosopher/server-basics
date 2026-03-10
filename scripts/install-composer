@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [[ "${EUID}" -ne 0 ]]; then
+  echo "Run this script as root." >&2
+  exit 1
+fi
+
+if ! command -v php >/dev/null 2>&1; then
+  echo "PHP is required before installing Composer." >&2
+  exit 1
+fi
+
+if ! command -v curl >/dev/null 2>&1; then
+  apt-get update
+  apt-get install -y curl
+fi
+
+tmp_dir="$(mktemp -d)"
+trap 'rm -rf "$tmp_dir"' EXIT
+
+cd "$tmp_dir"
+curl -fsSLo composer-setup.php https://getcomposer.org/installer
+php composer-setup.php
+install -m 0755 composer.phar /usr/local/bin/composer
+
+echo "Composer installed to /usr/local/bin/composer"
+composer --version

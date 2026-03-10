@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+usage() {
+  echo "Usage:"
+  echo "  mysql-create-db <database> <user>"
+  exit 1
+}
+
+[[ $# -eq 2 ]] || usage
+
+DB="$1"
+USER="$2"
+
+PASS="$(openssl rand -base64 16)"
+
+echo "Creating database: $DB"
+echo "Creating user: $USER"
+
+sudo mysql <<SQL
+CREATE DATABASE \`$DB\`
+  CHARACTER SET utf8mb4
+  COLLATE utf8mb4_unicode_ci;
+
+CREATE USER '$USER'@'localhost' IDENTIFIED BY '$PASS';
+
+GRANT ALL PRIVILEGES ON \`$DB\`.* TO '$USER'@'localhost';
+
+FLUSH PRIVILEGES;
+SQL
+
+echo
+echo "Database created."
+echo "User: $USER"
+echo "Password: $PASS"

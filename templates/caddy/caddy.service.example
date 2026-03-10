@@ -1,0 +1,22 @@
+[Unit]
+Description=Caddy HTTP/2 web server
+After=network-online.target
+Wants=network-online.target systemd-networkd-wait-online.service
+
+[Service]
+User=www-data
+Environment=CADDYPATH=/meta/ssl/
+ExecStart=/usr/local/bin/caddy -log=/var/www/caddy.log -agree=true -conf=/etc/caddy/Caddyfile -root=/var/tmp
+ExecReload=/bin/kill -USR1 $MAINPID
+LimitNOFILE=1048576
+LimitNPROC=64
+PrivateTmp=true
+PrivateDevices=true
+ProtectHome=true
+ProtectSystem=full
+ReadWriteDirectories=/meta/ssl
+CapabilityBoundingSet=CAP_NET_BIND_SERVICE
+AmbientCapabilities=CAP_NET_BIND_SERVICE
+
+[Install]
+WantedBy=multi-user.target

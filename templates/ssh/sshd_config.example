@@ -1,0 +1,55 @@
+# ==============================================================================
+# sshd_config.4747.example
+# Secure SSH server template using custom port 4747
+# Audit before use on a live server
+# ==============================================================================
+
+# --- Network ---
+Port 4747
+Protocol 2
+
+# --- Authentication ---
+PermitRootLogin prohibit-password
+PasswordAuthentication no
+KbdInteractiveAuthentication no
+ChallengeResponseAuthentication no
+PubkeyAuthentication yes
+AuthorizedKeysFile %h/.ssh/authorized_keys
+UsePAM yes
+
+# --- Session / login behavior ---
+LoginGraceTime 30
+PrintMotd no
+PrintLastLog yes
+TCPKeepAlive yes
+X11Forwarding no
+
+# --- Forwarding / tunneling ---
+AllowTcpForwarding yes
+AllowStreamLocalForwarding yes
+GatewayPorts no
+
+# Uncomment only if you explicitly need them
+# PermitTunnel yes
+# PermitOpen any
+
+# --- Subsystem ---
+Subsystem sftp /usr/lib/openssh/sftp-server
+
+# ==============================================================================
+# Usage notes
+#
+# 1. Copy into place:
+#    sudo cp templates/ssh/sshd_config.4747.example /etc/ssh/sshd_config
+#
+# 2. Test config BEFORE reloading:
+#    sudo sshd -t
+#
+# 3. Reload SSH:
+#    sudo systemctl reload ssh
+#
+# 4. Ensure port 4747 is allowed in firewall:
+#    sudo ufw allow 4747/tcp
+#
+# 5. Keep your current SSH session open while testing a new one.
+# ==============================================================================

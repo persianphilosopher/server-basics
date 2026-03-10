@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+usage() {
+  echo "Usage:"
+  echo "  mrename remove <substring> [-n]"
+  echo "  mrename replace <old> <new> [-n]"
+  echo "  mrename spaces [-n]"
+  exit 1
+}
+
+command -v rename >/dev/null || {
+  echo "rename command not found." >&2
+  exit 1
+}
+
+DRYRUN=""
+
+# detect dry-run flag
+if [[ "${@: -1}" == "-n" || "${@: -1}" == "--dry-run" ]]; then
+  DRYRUN="-n"
+  set -- "${@:1:$(($#-1))}"
+fi
+
+case "${1:-}" in
+  remove)
+    [[ $# -eq 2 ]] || usage
+    rename $DRYRUN "s/$2//g" *
+    ;;
+
+  replace)
+    [[ $# -eq 3 ]] || usage
+    rename $DRYRUN "s/$2/$3/g" *
+    ;;
+
+  spaces)
+    [[ $# -eq 1 ]] || usage
+    rename $DRYRUN 's/ /./g' *
+    ;;
+
+  *)
+    usage
+    ;;
+esac

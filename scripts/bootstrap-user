@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+BOOTSTRAP_USER="$(id -un)"
+BOOTSTRAP_HOME="$HOME"
+BOOTSTRAP_KEYS="$BOOTSTRAP_HOME/.ssh/authorized_keys"
+
+echo "Bootstrap user: $BOOTSTRAP_USER"
+
+read -r -p "New admin username [farhang]: " NEW_USER
+NEW_USER="${NEW_USER:-farhang}"
+
+echo "Target admin user: $NEW_USER"
+
