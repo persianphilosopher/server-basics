@@ -19,6 +19,7 @@ fi
 
 if grep -Fq "$BLOCK_START" "$BASHRC"; then
   echo "server-basics block already present in $BASHRC"
+  echo "Run: source ~/.bashrc"
   exit 0
 fi
 
@@ -26,6 +27,13 @@ cat >> "$BASHRC" <<EOF
 
 $BLOCK_START
 export BASICS_ROOT="$REPO_ROOT"
+
+# Enable bash completion if installed
+if [[ -f /usr/share/bash-completion/bash_completion ]]; then
+  source /usr/share/bash-completion/bash_completion
+fi
+
+# Load server-basics shell modules
 if [[ -d "\$BASICS_ROOT/shell" ]]; then
   for f in "\$BASICS_ROOT"/shell/*.sh; do
     [[ -r "\$f" ]] && source "\$f"
@@ -35,3 +43,6 @@ $BLOCK_END
 EOF
 
 echo "Added server-basics loader block to $BASHRC"
+echo
+echo "Open a new shell or run:"
+echo "  source ~/.bashrc"

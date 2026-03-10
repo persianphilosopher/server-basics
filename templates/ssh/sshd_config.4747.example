@@ -1,47 +1,38 @@
 # ==============================================================================
-# sshd_config.4747.example
-# Secure SSH template using port 4747
-# Placeholders:
-#   __ADMIN_USER__
-#   __BOOTSTRAP_USER__
+# sshd_config.4747.example — Secure SSH server config using custom port
+# Intended as a template — must be manually audited before use
 # ==============================================================================
 
-# --- Network ---
 Port 4747
 Protocol 2
 
-# --- Authentication defaults ---
-PermitRootLogin no
+# Strong key-based auth only
+PermitRootLogin prohibit-password
 PasswordAuthentication no
-KbdInteractiveAuthentication no
 ChallengeResponseAuthentication no
 PubkeyAuthentication yes
 AuthorizedKeysFile %h/.ssh/authorized_keys
-UsePAM yes
 
-# --- Session / login behavior ---
+# Connection and login behavior
 LoginGraceTime 30
 PrintMotd no
 PrintLastLog yes
 TCPKeepAlive yes
+UsePAM yes
 X11Forwarding no
 
-# --- Forwarding / tunneling ---
+# Tunneling & port forwarding (customize to need)
 AllowTcpForwarding yes
-AllowStreamLocalForwarding yes
+PermitTunnel yes
+PermitOpen any
 GatewayPorts no
+AllowStreamLocalForwarding yes
 
-# Uncomment only if you explicitly need them
-# PermitTunnel yes
-# PermitOpen any
-
-# --- Limit allowed SSH users ---
-AllowUsers __ADMIN_USER__ __BOOTSTRAP_USER__
-
-# --- Temporary fallback for bootstrap user ---
-Match User __BOOTSTRAP_USER__
-    PasswordAuthentication yes
-    KbdInteractiveAuthentication yes
-
-# --- Subsystem ---
+# Subsystem
 Subsystem sftp /usr/lib/openssh/sftp-server
+
+# === Reminder ===
+# To use this template:
+# sudo cp sshd_config.4747.example /etc/ssh/sshd_config
+# sudo systemctl restart ssh
+# Ensure port 4747 is open in your firewall
