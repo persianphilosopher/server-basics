@@ -13,3 +13,4 @@ deepword() {
   fi
   grep -RInw -- "$1" .
 }
+alias peyda='locate -b'

@@ -15,3 +15,6 @@ alias rm='rm -i'
 alias cp='cp -i'
 alias mv='mv -i'
 alias dux='du -xh --max-depth=1'
+alias webme="cd /var/www"
+alias naon="nano"
+alias nanon="nano"
